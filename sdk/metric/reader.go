@@ -26,6 +26,10 @@ var ErrReaderShutdown = errors.New("reader is shutdown")
 // has non-positive value.
 var errNonPositiveDuration = errors.New("non-positive duration")
 
+// errDurationOverflow is logged when an environmental variable's millisecond
+// count cannot be represented as a positive time.Duration.
+var errDurationOverflow = errors.New("duration overflows time.Duration")
+
 // Reader is the interface used between the SDK and an
 // exporter.  Control flow is bi-directional through the
 // Reader, since the SDK initiates ForceFlush and Shutdown

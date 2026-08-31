@@ -6,6 +6,7 @@ package metric
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -145,6 +146,26 @@ func TestIntervalEnvAndOption(t *testing.T) {
 	opts := []PeriodicReaderOption{WithInterval(want)}
 	got := newPeriodicReaderConfig(opts).interval
 	assert.Equal(t, want, got, "option should have precedence over env var")
+}
+
+func TestEnvDurationRejectsOverflow(t *testing.T) {
+	if strconv.IntSize != 64 {
+		t.Skip("the overflowing value only passes strconv.Atoi on 64-bit platforms")
+	}
+
+	const value = "9223372036855"
+	for _, tc := range []struct {
+		key  string
+		want time.Duration
+	}{
+		{key: envInterval, want: defaultInterval},
+		{key: envTimeout, want: defaultTimeout},
+	} {
+		t.Run(tc.key, func(t *testing.T) {
+			t.Setenv(tc.key, value)
+			assert.Equal(t, tc.want, envDuration(tc.key, tc.want))
+		})
+	}
 }
 
 type fnExporter struct {

@@ -4,6 +4,7 @@
 package metric
 
 import (
+	"math"
 	"os"
 	"strconv"
 	"time"
@@ -33,6 +34,10 @@ func envDuration(key string, defaultValue time.Duration) time.Duration {
 	}
 	if d <= 0 {
 		global.Error(errNonPositiveDuration, "non-positive duration", "environment variable", key, "value", v)
+		return defaultValue
+	}
+	if int64(d) > math.MaxInt64/int64(time.Millisecond) {
+		global.Error(errDurationOverflow, "duration overflows time.Duration", "environment variable", key, "value", v)
 		return defaultValue
 	}
 	return time.Duration(d) * time.Millisecond
