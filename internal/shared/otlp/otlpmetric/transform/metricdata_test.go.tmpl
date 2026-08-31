@@ -335,6 +335,7 @@ var (
 			Sum:               &sumA,
 			Scale:             2,
 			ZeroCount:         10,
+			ZeroThreshold:     .01,
 			Positive:          pbEHDPBA,
 			Negative:          pbEHDPBB,
 			Min:               &minA,
@@ -348,6 +349,7 @@ var (
 			Sum:               &sumB,
 			Scale:             4,
 			ZeroCount:         1,
+			ZeroThreshold:     .02,
 			Positive:          pbEHDPBC,
 			Negative:          pbEHDPBD,
 			Min:               &minB,
@@ -365,6 +367,7 @@ var (
 			Sum:               &sumA,
 			Scale:             2,
 			ZeroCount:         10,
+			ZeroThreshold:     .01,
 			Positive:          pbEHDPBA,
 			Negative:          pbEHDPBB,
 			Min:               &minA,
@@ -378,6 +381,7 @@ var (
 			Sum:               &sumB,
 			Scale:             4,
 			ZeroCount:         1,
+			ZeroThreshold:     .02,
 			Positive:          pbEHDPBC,
 			Negative:          pbEHDPBD,
 			Min:               &minB,
@@ -868,6 +872,17 @@ var (
 		SchemaUrl:    semconv.SchemaURL,
 	}
 )
+
+func TestExponentialHistogramDataPointsPreservesZeroThreshold(t *testing.T) {
+	const want = 0.01
+	got := ExponentialHistogramDataPoints(
+		[]metricdata.ExponentialHistogramDataPoint[float64]{
+			{ZeroThreshold: want},
+		},
+	)
+	require.Len(t, got, 1)
+	assert.Equal(t, want, got[0].ZeroThreshold)
+}
 
 func TestTransformations(t *testing.T) {
 	// Run tests from the "bottom-up" of the metricdata data-types and halt
