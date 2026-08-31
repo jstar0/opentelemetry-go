@@ -484,6 +484,38 @@ func TestExporterExportEncodingErrorTracking(t *testing.T) {
 	assert.True(t, foundErrorType)
 }
 
+func TestWithoutTimestampsDoesNotMutateInput(t *testing.T) {
+	start := time.Unix(1, 0).UTC()
+	end := time.Unix(2, 0).UTC()
+	rm := &metricdata.ResourceMetrics{
+		ScopeMetrics: []metricdata.ScopeMetrics{{
+			Metrics: []metricdata.Metrics{{
+				Name: "test",
+				Data: metricdata.Gauge[int64]{
+					DataPoints: []metricdata.DataPoint[int64]{{
+						StartTime: start,
+						Time:      end,
+						Value:     1,
+					}},
+				},
+			}},
+		}},
+	}
+	var b bytes.Buffer
+	exp, err := stdoutmetric.New(
+		stdoutmetric.WithWriter(&b),
+		stdoutmetric.WithoutTimestamps(),
+	)
+	require.NoError(t, err)
+
+	require.NoError(t, exp.Export(t.Context(), rm))
+	got := rm.ScopeMetrics[0].Metrics[0].Data.(metricdata.Gauge[int64]).DataPoints[0]
+	assert.Equal(t, start, got.StartTime)
+	assert.Equal(t, end, got.Time)
+	assert.NotContains(t, b.String(), start.Format(time.RFC3339))
+	assert.NotContains(t, b.String(), end.Format(time.RFC3339))
+}
+
 func BenchmarkExporterExport(b *testing.B) {
 	rm := &metricdata.ResourceMetrics{ScopeMetrics: scopeMetrics()}
 

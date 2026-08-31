@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Stop `WithoutTimestamps` from mutating caller-owned `ResourceMetrics` in `go.opentelemetry.io/otel/exporters/stdout/stdoutmetric`.
 - Prevent a panic in `NewFixedSizeReservoir` and `FixedSizeReservoirProvider` when given a negative size in `go.opentelemetry.io/otel/sdk/metric/exemplar`; negative sizes are now clamped to zero, consistent with a size of zero. (#8832)
 
 <!-- Released section -->

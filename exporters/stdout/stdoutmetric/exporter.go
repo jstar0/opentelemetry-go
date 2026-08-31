@@ -66,6 +66,8 @@ func (e *exporter) Export(ctx context.Context, data *metricdata.ResourceMetrics)
 		return err
 	}
 	if e.redactTimestamps {
+		// Redact a copy so Export leaves the caller's ResourceMetrics intact.
+		data = cloneResourceMetricsForRedaction(data)
 		redactTimestamps(data)
 	}
 
@@ -90,6 +92,24 @@ func (e *exporter) Shutdown(context.Context) error {
 
 func (*exporter) MarshalLog() any {
 	return struct{ Type string }{Type: "STDOUT"}
+}
+
+func cloneResourceMetricsForRedaction(orig *metricdata.ResourceMetrics) *metricdata.ResourceMetrics {
+	out := &metricdata.ResourceMetrics{Resource: orig.Resource}
+	if orig.ScopeMetrics == nil {
+		return out
+	}
+	out.ScopeMetrics = make([]metricdata.ScopeMetrics, len(orig.ScopeMetrics))
+	for i, sm := range orig.ScopeMetrics {
+		cloned := metricdata.ScopeMetrics{Scope: sm.Scope}
+		if sm.Metrics != nil {
+			metrics := make([]metricdata.Metrics, len(sm.Metrics))
+			copy(metrics, sm.Metrics)
+			cloned.Metrics = metrics
+		}
+		out.ScopeMetrics[i] = cloned
+	}
+	return out
 }
 
 func redactTimestamps(orig *metricdata.ResourceMetrics) {
